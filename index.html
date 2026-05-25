@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise Premiações 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+        .sidebar { background-color: #003366; transition: all 0.3s ease-in-out; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.15); border: 1px solid #e2e8f0; }
+        .nav-link { transition: all 0.2s; border-radius: 8px; }
+        .nav-link.active { background-color: #ffb800; color: #003366 !important; font-weight: 600; }
+        .text-navy { color: #003366; }
+        .text-gray-contrast { color: #475569; }
+        .section-content { display: none; }
+        .section-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .logo-container img { object-fit: contain; }
+
+        /* Scrollbar discreta para evitar poluição visual */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Comportamento do Menu Retrátil no Computador */
+        @media (min-width: 768px) {
+            .sidebar.collapsed { margin-left: -16rem; /* Empurra os 64px (16rem) do menu para fora da tela */ }
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar w-64 text-white flex-shrink-0 flex-col absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 z-50 flex h-full shadow-2xl md:shadow-none">
+        <div class="p-6 text-center border-b border-blue-900 relative">
+            <button id="close-sidebar" class="absolute top-4 right-4 text-blue-300 hover:text-white md:hidden">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div class="bg-white p-2 rounded-lg mb-4 inline-block logo-container shadow-lg">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/Bras%C3%A3o_de_Ol%C3%ADmpia%2C_SP.jpg" alt="Brasão de Olímpia" class="h-16">
+            </div>
+            <h2 class="text-[10px] font-bold tracking-widest uppercase text-blue-100 leading-tight px-2">Relatório - Divisão de Análise de Dados e Indicadores 2025</h2>
+        </div>
+        
+        <nav class="flex-grow p-4 space-y-2 mt-4 overflow-y-auto">
+            <a href="#" onclick="showSection('visao-geral', this)" class="nav-link active flex items-center space-x-3 p-3 text-blue-100 hover:bg-blue-800">
+                <i class="fa-solid fa-gauge-high w-6 text-center"></i>
+                <span>Visão Geral</span>
+            </a>
+            <a href="#" onclick="showSection('eixos-estrategicos', this)" class="nav-link flex items-center space-x-3 p-3 text-blue-100 hover:bg-blue-800">
+                <i class="fa-solid fa-chart-pie w-6 text-center"></i>
+                <span>Resultados & Eixos</span>
+            </a>
+            <a href="#" onclick="showSection('impacto-financeiro', this)" class="nav-link flex items-center space-x-3 p-3 text-blue-100 hover:bg-blue-800">
+                <i class="fa-solid fa-hand-holding-dollar w-6 text-center"></i>
+                <span>Impacto Financeiro</span>
+            </a>
+            <a href="#" onclick="showSection('diagnostico', this)" class="nav-link flex items-center space-x-3 p-3 text-blue-100 hover:bg-blue-800">
+                <i class="fa-solid fa-clipboard-check w-6 text-center"></i>
+                <span>Diagnóstico Final</span>
+            </a>
+        </nav>
+
+        <div class="p-6 bg-blue-950 text-[10px] text-blue-300 mt-auto border-t border-blue-900">
+            <p class="font-bold">Setor de Monitoramento e Avaliação de Indicdores</p>
+            <p> Divisão de Análise de Dados e Indicadores</p>
+            <p>Casa Civil | Município de Olímpia - SP</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col min-w-0 h-full overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white border-b h-16 flex items-center justify-between px-4 md:px-8 flex-shrink-0 z-10 shadow-sm">
+            <div class="flex items-center space-x-4">
+                <!-- Botão de menu agora visível sempre -->
+                <button id="menu-btn" class="text-navy hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <h1 id="page-title" class="text-lg md:text-xl font-bold text-navy uppercase tracking-tight truncate">Visão Geral do Relatório</h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="hidden md:inline-block bg-blue-100 text-navy px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Ano 2025</span>
+                <div class="h-8 w-8 rounded-full bg-navy text-gold flex items-center justify-center font-bold text-xs shadow-md border-2 border-gold flex-shrink-0">OP</div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content Container -->
+        <div class="p-4 md:p-8 overflow-y-auto flex-grow max-w-7xl mx-auto w-full">
+
+            <!-- SEÇÃO: VISÃO GERAL -->
+            <section id="visao-geral" class="section-content active">
+                <!-- Base Técnica Alert -->
+                <div class="mb-8 p-4 bg-blue-50 text-navy rounded-xl shadow-lg flex items-center border-l-8 border-gold">
+                    <div class="mr-4 text-2xl text-gold hidden sm:block"><i class="fa-solid fa-microscope"></i></div>
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-widest text-navy">Base Técnica de Referência</p>
+                        <p class="text-sm italic text-gray-800">Estudo "Arquitetura da Excelência Pública" — Validação da eficiência administrativa e melhoria da qualidade de vida.</p>
+                    </div>
+                </div>
+
+                <!-- Top Metrics -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                    <div class="card p-6 border-l-8 border-navy cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300" onclick="openModal('totais')">
+                        <p class="text-navy text-xs font-black uppercase tracking-wider mb-1">Iniciativas Totais</p>
+                        <h3 class="text-4xl font-bold text-navy">26</h3>
+                        <p class="text-[10px] text-green-700 mt-2 font-bold bg-green-50 px-2 py-1 rounded-md inline-block">Monitoramento Ativo</p>
+                    </div>
+                    <div class="card p-6 border-l-8 border-green-600 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300" onclick="openModal('concluidas')">
+                        <p class="text-gray-700 text-xs font-black uppercase tracking-wider mb-1">Concluídas</p>
+                        <h3 class="text-4xl font-bold text-green-700">24</h3>
+                        <p class="text-[10px] text-gray-800 mt-2 font-bold italic">92.3% de Sucesso</p>
+                    </div>
+                    <div class="card p-6 border-l-8 border-gold cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300" onclick="openModal('andamento')">
+                        <p class="text-gray-700 text-xs font-black uppercase tracking-wider mb-1">Em Andamento</p>
+                        <h3 class="text-4xl font-bold text-navy">02</h3>
+                        <p class="text-[10px] text-orange-700 mt-2 font-bold">Fase Final de Auditoria</p>
+                    </div>
+                    <div class="card p-6 border-l-8 border-blue-500 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300" onclick="openModal('top1')">
+                        <p class="text-gray-700 text-[10px] font-black uppercase tracking-wider mb-1">Top Ranking & Excelência</p>
+                        <h3 class="text-4xl font-bold text-blue-600">05</h3>
+                        <p class="text-[10px] text-blue-800 mt-2 font-bold">Máxima Relevância</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                    <!-- Classification Table -->
+                    <div class="card p-4 md:p-6 lg:col-span-2 overflow-hidden">
+                        <h4 class="font-black text-navy text-sm mb-4 uppercase tracking-widest border-b-2 border-gold pb-2">Balanço dos Resultados Alcançados</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs min-w-[400px]">
+                                <thead class="bg-blue-100 text-navy uppercase text-[10px] border-b border-blue-200">
+                                    <tr>
+                                        <th class="p-3 rounded-tl-lg">Tipo de Reconhecimento</th>
+                                        <th class="p-3 text-center rounded-tr-lg">Quantidade</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-gray-800 font-medium">
+                                    <tr class="border-b bg-gray-50">
+                                        <td class="p-3">🥇 1º Lugar / Medalha de Ouro</td>
+                                        <td class="p-3 text-center font-bold text-sm text-navy">01</td>
+                                    </tr>
+                                    <tr class="border-b">
+                                        <td class="p-3">🥉 3º Lugar / 🏅 5º Lugar</td>
+                                        <td class="p-3 text-center font-bold text-sm text-navy">02</td>
+                                    </tr>
+                                    <tr class="border-b bg-gray-50">
+                                        <td class="p-3">🏆 Premiações de Excelência (Sem Ranking)</td>
+                                        <td class="p-3 text-center font-bold text-sm text-navy">02</td>
+                                    </tr>
+                                    <tr class="border-b">
+                                        <td class="p-3">🟡 Selo Ouro / 🟣 Selo Safira</td>
+                                        <td class="p-3 text-center font-bold text-sm text-navy">02</td>
+                                    </tr>
+                                    <tr class="border-b bg-gray-50">
+                                        <td class="p-3">🟢 Certificações / Selos Técnicos</td>
+                                        <td class="p-3 text-center font-bold text-sm text-navy">08</td>
+                                    </tr>
+                                    <tr class="border-b">
+                                        <td class="p-3">📊 Notas e Índices Técnicos</td>
+                                        <td class="p-3 text-center font-bold text-sm text-navy">06</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Small Chart -->
+                    <div class="card p-6 flex flex-col items-center">
+                        <h4 class="font-black text-navy text-sm mb-4 uppercase tracking-widest border-b-2 border-gold pb-2 w-full text-center">Status Geral</h4>
+                        <div class="h-56 w-full relative">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                        <p class="mt-4 text-[11px] text-gray-700 text-center leading-tight italic">
+                            "Olímpia consolidou um ciclo virtuoso de gestão orientada por resultados."
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO: EIXOS ESTRATÉGICOS -->
+            <section id="eixos-estrategicos" class="section-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Fiscal -->
+                    <div class="card overflow-hidden">
+                        <div class="bg-blue-50 p-4 flex justify-between items-center text-navy border-b border-blue-100">
+                            <h5 class="font-bold text-xs uppercase tracking-widest">Governança & Crédito</h5>
+                            <i class="fa-solid fa-shield-halved text-gold"></i>
+                        </div>
+                        <div class="p-5 space-y-3">
+                            <p class="text-[10px] font-bold text-gray-800 uppercase border-b pb-1">Resultados:</p>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Inf. Fiscal (Tesouro)</span>
+                                <span class="text-green-600 bg-green-50 px-2 rounded">Nota A</span>
+                            </div>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Radar Transparência</span>
+                                <span class="text-gray-600 bg-gray-100 px-2 rounded">Prata</span>
+                            </div>
+                            <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded text-[11px] text-gray-800">
+                                <strong>💰 Impacto Financeiro:</strong> Melhor classificação de risco e acesso a financiamentos com juros reduzidos.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Turismo -->
+                    <div class="card overflow-hidden">
+                        <div class="bg-yellow-50 p-4 flex justify-between items-center text-navy border-b border-yellow-200">
+                            <h5 class="font-bold text-xs uppercase tracking-widest">Turismo & Projeção</h5>
+                            <i class="fa-solid fa-map-location-dot text-gold"></i>
+                        </div>
+                        <div class="p-5 space-y-3">
+                            <p class="text-[10px] font-bold text-gray-800 uppercase border-b pb-1">Resultados:</p>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Top Destinos Turísticos</span>
+                                <span class="italic underline text-blue-700">1º Lugar</span>
+                            </div>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Prêmio Band Cidades</span>
+                                <span>Destaque</span>
+                            </div>
+                            <div class="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded text-[11px] text-gray-800">
+                                <strong>💰 Impacto Financeiro:</strong> Principal motor econômico. Incremento direto no ISS e ICMS local.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Economia -->
+                    <div class="card overflow-hidden">
+                        <div class="bg-blue-50 p-4 flex justify-between items-center text-navy border-b border-blue-100">
+                            <h5 class="font-bold text-xs uppercase tracking-widest">Ambiente de Negócios</h5>
+                            <i class="fa-solid fa-briefcase text-gold"></i>
+                        </div>
+                        <div class="p-5 space-y-3">
+                            <p class="text-[10px] font-bold text-gray-800 uppercase border-b pb-1">Resultados:</p>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Referência Sebrae</span>
+                                <span class="text-orange-600 bg-orange-50 px-2 rounded">Selo Ouro</span>
+                            </div>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Selo Facilita SP</span>
+                                <span class="text-blue-600">Inovação</span>
+                            </div>
+                            <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded text-[11px] text-gray-800">
+                                <strong>💰 Impacto Financeiro:</strong> Redução de burocracia atrai novos investidores e expande a base tributária.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Educação -->
+                    <div class="card overflow-hidden">
+                        <div class="bg-blue-50 p-4 flex justify-between items-center text-navy border-b border-blue-100">
+                            <h5 class="font-bold text-xs uppercase tracking-widest">Educação & Capital Humano</h5>
+                            <i class="fa-solid fa-graduation-cap text-blue-600"></i>
+                        </div>
+                        <div class="p-5 space-y-3">
+                            <p class="text-[10px] font-bold text-gray-800 uppercase border-b pb-1">Resultados:</p>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Prêmio PAR Alfabetização</span>
+                                <span class="text-blue-700 bg-blue-50 px-2 rounded">Destaque</span>
+                            </div>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Índice Progresso Social</span>
+                                <span class="text-green-600">Desempenho Elevado</span>
+                            </div>
+                            <div class="mt-4 p-3 bg-blue-50 border-l-4 border-blue-600 rounded text-[11px] text-gray-800">
+                                <strong>💰 Impacto Financeiro:</strong> Recebimento de laboratórios e suporte técnico educacional gratuito.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sustentabilidade -->
+                    <div class="card overflow-hidden">
+                        <div class="bg-green-50 p-4 flex justify-between items-center text-green-900 border-b border-green-200">
+                            <h5 class="font-bold text-xs uppercase tracking-widest">Sustentabilidade</h5>
+                            <i class="fa-solid fa-seedling text-green-600"></i>
+                        </div>
+                        <div class="p-5 space-y-3">
+                            <p class="text-[10px] font-bold text-gray-800 uppercase border-b pb-1">Resultados:</p>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Prêmio Caixa Sustentável</span>
+                                <span class="text-purple-700 bg-purple-50 px-2 rounded">Safira</span>
+                            </div>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Município Agro</span>
+                                <span class="text-green-700 bg-green-50 px-2 rounded">Certificado</span>
+                            </div>
+                            <div class="mt-4 p-3 bg-green-50 border-l-4 border-green-600 rounded text-[11px] text-gray-800">
+                                <strong>💰 Impacto Financeiro:</strong> Repasse financeiro estadual direto (Agro) e prioridade no FECOP.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inclusão -->
+                    <div class="card overflow-hidden">
+                        <div class="bg-red-50 p-4 flex justify-between items-center text-red-900 border-b border-red-200">
+                            <h5 class="font-bold text-xs uppercase tracking-widest">Social & Inclusão</h5>
+                            <i class="fa-solid fa-heart text-red-500"></i>
+                        </div>
+                        <div class="p-5 space-y-3">
+                            <p class="text-[10px] font-bold text-gray-800 uppercase border-b pb-1">Resultados:</p>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Selo Amigo Pessoa TEA</span>
+                                <span class="text-red-700 bg-red-50 px-2 rounded">Concedido</span>
+                            </div>
+                            <div class="flex justify-between text-xs font-bold text-navy">
+                                <span>Prefeito Amigo Criança</span>
+                                <span class="text-gray-500 italic">Em curso</span>
+                            </div>
+                            <div class="mt-4 p-3 bg-red-50 border-l-4 border-red-500 rounded text-[11px] text-gray-800">
+                                <strong>💰 Impacto Financeiro:</strong> Acesso facilitado a recursos de programas sociais e editais de assistência.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO: IMPACTO FINANCEIRO CONSOLIDADO -->
+            <section id="impacto-financeiro" class="section-content">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                    <!-- Impactos Diretos -->
+                    <div class="card p-6 border-t-8 border-green-600">
+                        <h4 class="font-black text-green-700 text-sm mb-6 uppercase tracking-widest flex items-center">
+                            <i class="fa-solid fa-money-bill-trend-up mr-2"></i> Impactos Diretos
+                        </h4>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openModal('imp_par')">
+                                <p class="text-xs font-bold text-navy uppercase">Prêmio PAR</p>
+                                <p class="text-xs text-gray-800 mt-1">Estrutura educacional.</p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openModal('imp_agro')">
+                                <p class="text-xs font-bold text-navy uppercase">Município Agro</p>
+                                <p class="text-xs text-gray-800 mt-1">Repasse financeiro estadual.</p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openModal('imp_caixa')">
+                                <p class="text-xs font-bold text-navy uppercase">Selo CAIXA</p>
+                                <p class="text-xs text-gray-800 mt-1">Acesso a crédito com melhores condições.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Impactos Indiretos -->
+                    <div class="card p-6 border-t-8 border-navy">
+                        <h4 class="font-black text-navy text-sm mb-6 uppercase tracking-widest flex items-center">
+                            <i class="fa-solid fa-chart-line mr-2"></i> Impactos Indiretos de Alto Peso
+                        </h4>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openModal('imp_turismo')">
+                                <p class="text-xs font-bold text-navy uppercase">Turismo</p>
+                                <p class="text-xs text-gray-800 mt-1">Aumento de ISS e consumo.</p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openModal('imp_negocios')">
+                                <p class="text-xs font-bold text-navy uppercase">Ambiente de Negócios</p>
+                                <p class="text-xs text-gray-800 mt-1">Crescimento econômico.</p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openModal('imp_governanca')">
+                                <p class="text-xs font-bold text-navy uppercase">Governança Fiscal</p>
+                                <p class="text-xs text-gray-800 mt-1">Maior captação de recursos.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Impactos Estratégicos -->
+                    <div class="card p-6 border-t-8 border-gold">
+                        <h4 class="font-black text-navy text-sm mb-6 uppercase tracking-widest flex items-center">
+                            <i class="fa-solid fa-chess mr-2"></i> Estratégicos (médio/longo prazo)
+                        </h4>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openModal('imp_sustentabilidade')">
+                                <p class="text-xs font-bold text-navy uppercase">Sustentabilidade</p>
+                                <p class="text-xs text-gray-800 mt-1">Acesso a fundos ambientais.</p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openModal('imp_inovacao')">
+                                <p class="text-xs font-bold text-navy uppercase">Inovação</p>
+                                <p class="text-xs text-gray-800 mt-1">Atração de investimentos.</p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer" onclick="openModal('imp_social')">
+                                <p class="text-xs font-bold text-navy uppercase">Social</p>
+                                <p class="text-xs text-gray-800 mt-1">Redução de custos futuros com políticas públicas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO: DIAGNÓSTICO -->
+            <section id="diagnostico" class="section-content">
+                <div class="card p-6 md:p-8 bg-gradient-to-br from-blue-50 to-white border border-blue-200 shadow-xl relative overflow-hidden mb-8">
+                    <div class="absolute top-0 right-0 p-4 md:p-8 opacity-10 text-9xl text-navy"><i class="fa-solid fa-medal"></i></div>
+                    <h4 class="text-xl md:text-2xl font-black uppercase tracking-tighter mb-4 text-navy italic">Leitura Estratégica Final</h4>
+                    <p class="text-base md:text-lg font-medium leading-relaxed max-w-3xl relative z-10 text-gray-800">
+                        "Olímpia consolidou um ciclo virtuoso: Governança eficiente gera credibilidade, que atrai investimentos, resultando em crescimento econômico e novas premiações que retroalimentam o sistema."
+                    </p>
+                    <div class="mt-8 pt-6 border-t border-blue-200 flex flex-wrap gap-3 relative z-10">
+                        <span class="bg-gold text-navy px-4 py-2 rounded-lg font-bold text-[10px] md:text-xs uppercase shadow-sm">Maturidade Administrativa Elevada</span>
+                        <span class="bg-blue-100 text-navy border border-blue-200 px-4 py-2 rounded-lg font-bold text-[10px] md:text-xs uppercase">Referência Nacional</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                    <div class="card p-6 border-l-8 border-navy">
+                        <h4 class="font-black text-navy text-sm mb-4 uppercase tracking-widest">Recomendações Técnicas</h4>
+                        <ul class="space-y-4">
+                            <li class="flex items-start text-xs font-medium text-gray-800">
+                                <i class="fa-solid fa-circle-arrow-right mt-0.5 mr-3 text-navy"></i> 
+                                <span>Estruturar estratégia ativa de captação vinculada a selos específicos.</span>
+                            </li>
+                            <li class="flex items-start text-xs font-medium text-gray-800">
+                                <i class="fa-solid fa-circle-arrow-right mt-0.5 mr-3 text-navy"></i> 
+                                <span>Expandir políticas de inovação para setores além da hotelaria.</span>
+                            </li>
+                            <li class="flex items-start text-xs font-medium text-gray-800">
+                                <i class="fa-solid fa-circle-arrow-right mt-0.5 mr-3 text-navy"></i> 
+                                <span>Integrar premiações ao planejamento orçamentário anual (LOA).</span>
+                            </li>
+                            <li class="flex items-start text-xs font-medium text-gray-800">
+                                <i class="fa-solid fa-circle-arrow-right mt-0.5 mr-3 text-navy"></i> 
+                                <span>Priorizar projetos financiáveis pela CAIXA vinculados ao Selo Safira.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card p-6 bg-gray-50 flex flex-col justify-center items-center text-center">
+                        <p class="text-[10px] font-black text-navy uppercase tracking-widest mb-4">Responsabilidade Técnica</p>
+                        <div class="space-y-1">
+                            <p class="text-sm font-bold text-gray-800">Divisão de Análise de Dados e Indicadores</p>
+                            <p class="text-xs text-gray-600 font-medium">Secretaria da Casa Civil</p>
+                            <p class="text-xs text-gray-600 font-medium italic mt-2 inline-block bg-white px-3 py-1 rounded shadow-sm border border-gray-200">Município de Olímpia - SP | Ano 2025</p>
+                        </div>
+                        <div class="mt-6">
+                            <p class="text-[9px] text-gray-500 font-bold uppercase bg-gray-200 px-2 py-1 rounded border border-gray-300">Base Técnica: Estudo "Arquitetura da Excelência Pública"</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Modal de Detalhes -->
+        <div id="detailsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center backdrop-blur-sm px-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all mt-20 md:mt-0 mx-auto">
+                <div class="bg-blue-50 border-b border-blue-100 p-4 flex justify-between items-center text-navy">
+                    <h3 id="modalTitle" class="font-bold uppercase tracking-widest text-sm">Detalhes</h3>
+                    <button onclick="closeModal()" class="text-navy hover:text-blue-800 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <div id="modalContent" class="p-6 text-gray-800 text-sm space-y-4 max-h-96 overflow-y-auto">
+                    <!-- Conteúdo dinâmico injetado via JavaScript -->
+                </div>
+                <div class="bg-gray-50 p-4 border-t flex justify-end">
+                    <button onclick="closeModal()" class="bg-blue-100 text-navy border border-blue-200 px-5 py-2 rounded-lg shadow-sm hover:bg-blue-200 transition-colors text-xs font-bold uppercase tracking-wider">Fechar</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Gestão de Navegação
+        function showSection(sectionId, element) {
+            // Atualiza links
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            element.classList.add('active');
+
+            // Atualiza seções
+            document.querySelectorAll('.section-content').forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+
+            // Atualiza Título
+            const titles = {
+                'visao-geral': 'Visão Geral do Relatório',
+                'eixos-estrategicos': 'Eixos e Análise por Área',
+                'impacto-financeiro': 'Impacto Financeiro Consolidado',
+                'diagnostico': 'Leitura Estratégica e Conclusão'
+            };
+            document.getElementById('page-title').innerText = titles[sectionId];
+
+            // Fecha sidebar no mobile após clique (sem fechar se estiver no Desktop)
+            if (window.innerWidth < 768) {
+                toggleSidebar();
+            }
+        }
+
+        // Lógica do Menu Responsivo e Retrátil
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const menuBtn = document.getElementById('menu-btn');
+        const closeBtn = document.getElementById('close-sidebar');
+
+        function toggleSidebar() {
+            if (window.innerWidth < 768) {
+                // Comportamento no Celular (sobreposição)
+                sidebar.classList.toggle('-translate-x-full');
+                overlay.classList.toggle('hidden');
+            } else {
+                // Comportamento no Computador (deslizamento que empurra o conteúdo)
+                sidebar.classList.toggle('collapsed');
+            }
+        }
+
+        menuBtn.addEventListener('click', toggleSidebar);
+        closeBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // Lógica do Modal
+        const modalData = {
+            'totais': {
+                title: 'Iniciativas Totais (26)',
+                content: '<p class="text-navy font-bold">Listagem Completa do Portfólio (26):</p><ul class="list-disc pl-5 space-y-1 mt-2 text-gray-800 text-xs"><li><strong>Top Destinos Turísticos:</strong> 1º Lugar</li><li><strong>Prêmio Band Cidades Excelentes:</strong> Destaque</li><li><strong>Selo Sebrae de Referência:</strong> Selo Ouro</li><li><strong>Prêmio CAIXA Sustentável:</strong> Selo Safira</li><li><strong>Prêmio PAR Alfabetização:</strong> Destaque</li><li><strong>Capacidade de Pagamento (Tesouro):</strong> Nota A</li><li><strong>Radar da Transparência:</strong> Selo Prata</li><li><strong>Município Agro:</strong> Certificado</li><li><strong>Município Amigo da Pessoa com TEA:</strong> Concedido</li><li><strong>Índice de Progresso Social (IPS):</strong> Desempenho Elevado</li><li><strong>Selo Facilita SP:</strong> Inovação</li><li><strong>Índice Firjan de Gestão Fiscal (IFGF):</strong> Alta Gestão</li><li><strong>Programa Município VerdeAzul:</strong> Certificado</li><li><strong>IEG-M / TCESP:</strong> Avaliação Positiva</li><li><strong>Regularidade Previdenciária (CRP):</strong> Regular</li><li><strong>IDEB:</strong> Meta Superada</li><li><strong>Previne Brasil (Saúde):</strong> Indicadores Maximizados</li><li><strong>Destino Turístico Inteligente (DTI):</strong> Em Conformidade</li><li><strong>Selo Turismo Responsável:</strong> Chancelado</li><li><strong>Mapa do Turismo Brasileiro:</strong> Categoria A</li><li><strong>SIOPS (Saúde):</strong> Regularidade</li><li><strong>SIOPE (Educação):</strong> Regularidade</li><li><strong>CAUC:</strong> Adimplência Total</li><li><strong>Transparência de Obras Públicas:</strong> Concedido</li><li class="text-orange-700 font-bold mt-2">EM ANDAMENTO: Programa Prefeito Amigo da Criança (Fundação Abrinq)</li><li class="text-orange-700 font-bold">EM ANDAMENTO: Certificação Adicional de Qualidade</li></ul>'
+            },
+            'concluidas': {
+                title: 'Iniciativas Concluídas (24)',
+                content: '<p class="text-navy font-bold mb-2">Reconhecimentos Conquistados (24):</p><ul class="list-disc pl-5 space-y-1 mt-2 text-gray-800 text-xs"><li><strong>Top Destinos Turísticos:</strong> 1º Lugar</li><li><strong>Prêmio Band Cidades Excelentes:</strong> Destaque</li><li><strong>Selo Sebrae de Referência:</strong> Selo Ouro</li><li><strong>Prêmio CAIXA Sustentável:</strong> Selo Safira</li><li><strong>Prêmio PAR Alfabetização:</strong> Destaque</li><li><strong>Capacidade de Pagamento (Tesouro Nacional):</strong> Nota A</li><li><strong>Radar da Transparência Pública:</strong> Selo Prata</li><li><strong>Programa Município Agro:</strong> Certificado</li><li><strong>Selo Município Amigo da Pessoa com TEA:</strong> Concedido</li><li><strong>Índice de Progresso Social (IPS):</strong> Desempenho Elevado</li><li><strong>Selo Facilita SP:</strong> Inovação</li><li><strong>Índice Firjan de Gestão Fiscal (IFGF):</strong> Alta Gestão</li><li><strong>Programa Município VerdeAzul:</strong> Certificado</li><li><strong>Índice de Efetividade da Gestão Municipal (IEG-M):</strong> Avaliação Positiva</li><li><strong>Certificado de Regularidade Previdenciária (CRP):</strong> Regular</li><li><strong>Índice de Desenvolvimento da Educação Básica (IDEB):</strong> Meta Superada</li><li><strong>Previne Brasil (Atenção Básica):</strong> Indicadores Maximizados</li><li><strong>Certificação de Destino Turístico Inteligente (DTI):</strong> Em Conformidade</li><li><strong>Selo Turismo Responsável:</strong> Chancelado</li><li><strong>Mapa do Turismo Brasileiro:</strong> Categoria A</li><li><strong>SIOPS:</strong> Regularidade</li><li><strong>SIOPE:</strong> Regularidade</li><li><strong>CAUC:</strong> Adimplência Total</li><li><strong>Certificação de Transparência de Obras Públicas:</strong> Concedido</li></ul>'
+            },
+            'andamento': {
+                title: 'Em Andamento (02)',
+                content: '<p class="text-navy font-bold">Projetos em Fase Final (Auditoria/Avaliação):</p><ul class="list-disc pl-5 space-y-2 mt-2 text-gray-800 text-sm"><li><strong>Programa Prefeito Amigo da Criança (Fundação Abrinq):</strong> Em fase de estruturação de relatórios e apuração de indicadores finais.</li><li><strong>Certificação Adicional de Qualidade:</strong> Auditoria final para ampliação do grau de inovação e desburocratização no ambiente de negócios.</li></ul>'
+            },
+            'top1': {
+                title: 'Top Ranking & Excelência Máxima (05)',
+                content: '<p class="text-navy font-bold">Reconhecimentos de Nível Máximo (5):</p><ul class="list-disc pl-5 space-y-2 mt-2 text-gray-800 text-sm"><li><strong>🏆 Top Destinos Turísticos:</strong> 1º Lugar (Liderança Nacional)</li><li><strong>🏆 Prêmio Band Cidades Excelentes:</strong> Destaque de Excelência</li><li><strong>🏆 Prêmio PAR Alfabetização:</strong> Destaque de Excelência</li><li><strong>🟡 Selo Sebrae de Referência:</strong> Selo Ouro</li><li><strong>🟣 Prêmio CAIXA Sustentável:</strong> Selo Safira</li></ul><p class="mt-4 text-xs text-navy bg-blue-50 p-2 border-l-2 border-navy">Estes indicadores refletem as conquistas onde Olímpia alcançou o pódio máximo, chancelas de ouro ou grau máximo de excelência avaliado pelas instituições.</p>'
+            },
+            'imp_par': {
+                title: 'Prêmio PAR - Impacto Direto',
+                content: '<p class="text-navy font-bold">Estrutura Educacional:</p><p class="mt-2 text-gray-800 text-sm">Recebimento de equipamentos, materiais didáticos e viabilização de laboratórios estruturais para a rede municipal de ensino, gerando economia direta aos cofres públicos.</p>'
+            },
+            'imp_agro': {
+                title: 'Município Agro - Impacto Direto',
+                content: '<p class="text-navy font-bold">Repasse Financeiro Estadual:</p><p class="mt-2 text-gray-800 text-sm">Transferência direta de recursos do governo do Estado de São Paulo para o tesouro municipal, destinados a investimentos na infraestrutura rural e apoio técnico ao produtor local.</p>'
+            },
+            'imp_caixa': {
+                title: 'Selo CAIXA - Impacto Direto',
+                content: '<p class="text-navy font-bold">Acesso a Crédito Facilitado:</p><p class="mt-2 text-gray-800 text-sm">Acesso a linhas de crédito institucionais com taxas de juros subsidiadas e melhores condições de amortização, aumentando substancialmente a capacidade de investimento estrutural do município.</p>'
+            },
+            'imp_turismo': {
+                title: 'Turismo - Impacto Indireto de Alto Peso',
+                content: '<p class="text-navy font-bold">Aumento de ISS e Consumo:</p><p class="mt-2 text-gray-800 text-sm">A atração contínua de turistas gera um aumento expressivo na arrecadação de Imposto Sobre Serviços (ISS) da rede hoteleira e forte aquecimento do consumo no comércio e serviços locais.</p>'
+            },
+            'imp_negocios': {
+                title: 'Ambiente de Negócios - Impacto Indireto de Alto Peso',
+                content: '<p class="text-navy font-bold">Crescimento Econômico:</p><p class="mt-2 text-gray-800 text-sm">A redução da burocracia e maior agilidade na abertura de empresas resulta na atração de novos investidores, ampliação da geração de empregos e expansão natural da base tributária do município.</p>'
+            },
+            'imp_governanca': {
+                title: 'Governança Fiscal - Impacto Indireto de Alto Peso',
+                content: '<p class="text-navy font-bold">Maior Captação de Recursos:</p><p class="mt-2 text-gray-800 text-sm">A elevação da nota de capacidade de pagamento e o aumento da transparência garantem maior confiabilidade para a aprovação e captação de repasses federais, estaduais e emendas parlamentares.</p>'
+            },
+            'imp_sustentabilidade': {
+                title: 'Sustentabilidade - Estratégico (Médio/Longo Prazo)',
+                content: '<p class="text-navy font-bold">Acesso a Fundos Ambientais:</p><p class="mt-2 text-gray-800 text-sm">O alinhamento às pautas ESG e certificações ambientais garantem a Olímpia prioridade no acesso a fundos globais e estaduais de proteção ambiental e repasses do ICMS Ecológico.</p>'
+            },
+            'imp_inovacao': {
+                title: 'Inovação - Estratégico (Médio/Longo Prazo)',
+                content: '<p class="text-navy font-bold">Atração de Investimentos:</p><p class="mt-2 text-gray-800 text-sm">A modernização atrai startups, empresas do setor de tecnologia e consolida o município como um Destino Turístico Inteligente (DTI), diversificando a matriz econômica da cidade para o futuro.</p>'
+            },
+            'imp_social': {
+                title: 'Social - Estratégico (Médio/Longo Prazo)',
+                content: '<p class="text-navy font-bold">Redução de Custos Futuros:</p><p class="mt-2 text-gray-800 text-sm">Investimentos eficientes em inclusão social, primeira infância e saúde preventiva geram bem-estar imediato e reduzem de forma profunda os gastos futuros do município com demandas judiciais, saúde de alta complexidade e segurança pública.</p>'
+            }
+        };
+
+        const modal = document.getElementById('detailsModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+
+        function openModal(id) {
+            const data = modalData[id];
+            if(data) {
+                modalTitle.innerText = data.title;
+                modalContent.innerHTML = data.content;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Fechar modal ao clicar fora
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Inicialização do Gráfico
+        window.onload = function() {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['1º Lugar & Excelência Máxima', 'Pódios (3º/5º)', 'Certificações Técnicas', 'Notas e Índices', 'Concluídas (Base)', 'Em Andamento'],
+                    datasets: [{
+                        data: [5, 2, 8, 6, 3, 2],
+                        backgroundColor: [
+                            '#FFD700', // 1º Lugar & Excelência
+                            '#94a3b8', // Pódios
+                            '#10b981', // Certificações
+                            '#3b82f6', // Notas/Índices
+                            '#003366', // Concluídas Base
+                            '#f97316'  // Andamento
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff',
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 8,
+                                usePointStyle: true,
+                                boxWidth: 6,
+                                font: { family: "'Poppins', sans-serif", size: 9, weight: '600' },
+                                color: '#1e293b'
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+    </script>
+</body>
+</html>
